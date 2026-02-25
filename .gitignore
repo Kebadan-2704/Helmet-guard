@@ -1,0 +1,28 @@
+# Environment variables (SENSITIVE — never commit!)
+.env
+backend/.env
+
+# Logs and databases (may contain secrets)
+logs/
+backend/database/
+backend/logs/
+*.log
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+
+# Gemini AI artifacts
+.gemini/

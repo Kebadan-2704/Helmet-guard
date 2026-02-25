@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+firebase-admin
+python-dotenv
+pydantic
+requests
+twilio
+aiofiles

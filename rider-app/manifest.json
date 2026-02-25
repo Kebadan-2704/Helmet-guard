@@ -1,0 +1,54 @@
+{
+    "name": "HelmetGuard — Rider Safety",
+    "short_name": "HelmetGuard",
+    "description": "Smart helmet safety system with crash detection, emergency SMS alerts, GPS tracking, and incident video recording.",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#050505",
+    "theme_color": "#D4A843",
+    "categories": [
+        "health",
+        "safety",
+        "lifestyle"
+    ],
+    "icons": [
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "View Location",
+            "short_name": "Location",
+            "url": "/index.html#location",
+            "icons": [
+                {
+                    "src": "icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Emergency Contacts",
+            "short_name": "Family",
+            "url": "/index.html#family",
+            "icons": [
+                {
+                    "src": "icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}
