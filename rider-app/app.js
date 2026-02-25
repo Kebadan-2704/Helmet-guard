@@ -18,7 +18,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 // ═══════ CONFIG ═══════
-const BACKEND_URL = 'http://localhost:8000';
+const BACKEND_URL = 'https://helmet-guard.onrender.com';
 const PRE_BUFFER_SECONDS = 2;
 const POST_RECORD_SECONDS = 20;
 const CHUNK_INTERVAL_MS = 1000;
