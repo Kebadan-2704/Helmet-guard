@@ -300,7 +300,8 @@ function startRollingBuffer() {
 }
 
 function getSupportedMimeType() {
-    for (const t of ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4']) {
+    // Prefer MP4 for maximum phone compatibility
+    for (const t of ['video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']) {
         if (MediaRecorder.isTypeSupported(t)) return t;
     }
     return 'video/webm';
@@ -344,9 +345,11 @@ function stopIncidentRecording() {
     const allChunks = [...state.preIncidentChunks, ...state.incidentChunks];
     if (allChunks.length === 0) return;
 
-    const blob = new Blob(allChunks, { type: getSupportedMimeType() });
+    const mime = getSupportedMimeType();
+    const blob = new Blob(allChunks, { type: mime });
     const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const filename = `HelmetGuard_Incident_${dateStr}.webm`;
+    const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+    const filename = `HelmetGuard_Incident_${dateStr}.${ext}`;
 
     // Store in gallery
     const url = URL.createObjectURL(blob);
@@ -411,12 +414,15 @@ function renderGallery() {
         const dateFmt = item.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
 
         row.innerHTML = `
-            <div class="gallery-thumb"><i class="fas fa-play-circle"></i></div>
-            <div class="gallery-item-info">
+            <div class="gallery-thumb" onclick="playGalleryItem(${item.id})" style="cursor:pointer;"><i class="fas fa-play-circle"></i></div>
+            <div class="gallery-item-info" onclick="playGalleryItem(${item.id})" style="cursor:pointer;">
                 <strong>Incident #${state.gallery.length - idx}</strong>
                 <span>${dateFmt} ${time} | ${sizeMB}MB | ${item.gforce}G</span>
             </div>
             <div class="gallery-item-actions">
+                <button class="gallery-btn" title="Play" onclick="playGalleryItem(${item.id})">
+                    <i class="fas fa-play"></i>
+                </button>
                 <button class="gallery-btn" title="Download" onclick="downloadGalleryItem(${item.id})">
                     <i class="fas fa-download"></i>
                 </button>
@@ -427,6 +433,41 @@ function renderGallery() {
         `;
         list.appendChild(row);
     });
+}
+
+function playGalleryItem(id) {
+    const item = state.gallery.find(g => g.id === id);
+    if (!item) return;
+    // Open in-app fullscreen video player
+    let player = document.getElementById('videoPlayerOverlay');
+    if (!player) {
+        player = document.createElement('div');
+        player.id = 'videoPlayerOverlay';
+        player.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;';
+        player.innerHTML = `
+            <video id="videoPlayerEl" controls autoplay playsinline style="max-width:95%;max-height:75vh;border-radius:12px;background:#000;"></video>
+            <div style="display:flex;gap:0.8rem;">
+                <button onclick="downloadGalleryItem(${id})" style="padding:0.6rem 1.2rem;border-radius:10px;background:linear-gradient(135deg,#B8860B,#D4A843);color:#000;border:none;font-weight:700;cursor:pointer;"><i class="fas fa-download"></i> Save</button>
+                <button onclick="closeVideoPlayer()" style="padding:0.6rem 1.2rem;border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);font-weight:600;cursor:pointer;"><i class="fas fa-times"></i> Close</button>
+            </div>`;
+        document.body.appendChild(player);
+    } else {
+        player.style.display = 'flex';
+        // Update download button with current id
+        player.querySelector('button').setAttribute('onclick', `downloadGalleryItem(${id})`);
+    }
+    const videoEl = document.getElementById('videoPlayerEl');
+    videoEl.src = item.url;
+    videoEl.play().catch(() => { });
+}
+
+function closeVideoPlayer() {
+    const player = document.getElementById('videoPlayerOverlay');
+    if (player) {
+        const videoEl = document.getElementById('videoPlayerEl');
+        if (videoEl) { videoEl.pause(); videoEl.src = ''; }
+        player.style.display = 'none';
+    }
 }
 
 function downloadGalleryItem(id) {
@@ -824,11 +865,12 @@ async function triggerEmergencyAlert(data) {
                     showToast(`✅ Emergency SMS sent to all ${sent} contacts!`);
                 }
             } else {
-                showToast('❌ SMS sending failed', true);
+                console.error('SMS failed:', result);
+                showToast('❌ SMS failed — check Twilio verified numbers', true);
             }
         } catch (err) {
             console.error('Backend error:', err);
-            showToast('❌ Server unreachable — trying fallback...', true);
+            showToast('❌ Server unreachable — opening SMS app...', true);
             fallbackSMS(data, mapLink);
         }
     } else {
