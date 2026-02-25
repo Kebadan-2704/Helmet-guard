@@ -41,7 +41,8 @@ const state = {
     gforceLabels: [],
     updateCount: 0,
     incidents: 0,
-    lastStatus: null,
+    lastStatus: 'SAFE',
+    isFirstLoad: true,
     events: [],
     location: { lat: null, lng: null, accuracy: null },
     map: null,
@@ -518,9 +519,19 @@ function startHelmetListener() {
 
         if (data.status !== undefined) {
             const status = String(data.status);
+
+            // On FIRST load, just sync UI — don't trigger emergency actions
+            if (state.isFirstLoad) {
+                state.isFirstLoad = false;
+                state.lastStatus = status;
+                // Always show SAFE on fresh app open
+                updateStatusUI('SAFE');
+                return;
+            }
+
             updateStatusUI(status);
 
-            // Only on STATUS CHANGE
+            // Only on STATUS CHANGE (live, not on load)
             if (status !== state.lastStatus) {
                 state.events.unshift({ status, time: now, gforce: data.crash_gforce || data.live_gforce || null });
                 if (state.events.length > 50) state.events.pop();
