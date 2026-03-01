@@ -51,6 +51,7 @@ const state = {
     chart: null,
     webcamStream: null,
     mediaRecorder: null,
+    videoHeaderChunk: null,
     videoChunks: [],
     isRecordingIncident: false,
     incidentChunks: [],
@@ -278,10 +279,14 @@ function startRollingBuffer() {
     try {
         const recorder = new MediaRecorder(state.webcamStream, { mimeType, videoBitsPerSecond: 800000 });
         state.mediaRecorder = recorder;
+        state.videoHeaderChunk = null;
         state.videoChunks = [];
 
         recorder.ondataavailable = (e) => {
             if (!e.data || e.data.size === 0) return;
+            if (!state.videoHeaderChunk) {
+                state.videoHeaderChunk = e.data;
+            }
             if (state.isRecordingIncident) {
                 state.incidentChunks.push(e.data);
             } else {
@@ -343,7 +348,12 @@ function stopIncidentRecording() {
     const badge = $('recordingBadge');
     if (badge) badge.classList.remove('active');
 
-    const allChunks = [...state.preIncidentChunks, ...state.incidentChunks];
+    const allChunks = [];
+    if (state.videoHeaderChunk) allChunks.push(state.videoHeaderChunk);
+    for (const chunk of [...state.preIncidentChunks, ...state.incidentChunks]) {
+        if (chunk !== state.videoHeaderChunk) allChunks.push(chunk);
+    }
+
     if (allChunks.length === 0) return;
 
     const mime = getSupportedMimeType();
